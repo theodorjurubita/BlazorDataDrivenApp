@@ -1,0 +1,49 @@
+﻿@page "/employees"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using WiredBrainCoffee.EmployeeManager.Data
+@inject IDbContextFactory<WiredBrainCoffee.EmployeeManager.Data.EmployeeManagerDbContext> DbFactory
+@rendermode InteractiveServer
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="employees/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="Employees" Pagination="paginationState">
+    <PropertyColumn Property="employee => employee.FirstName"
+                    Sortable="true" Title="Firstname">
+        <ColumnOptions>
+            <input type="search" class="form-control"
+                   @bind="firstNameFilter" @bind:event="oninput" autofocus />
+        </ColumnOptions>
+    </PropertyColumn>
+    <PropertyColumn Property="employee => employee.LastName"
+                    Sortable="true" Title="Lastname" />
+    <PropertyColumn Property="employee => employee.IsDeveloper"
+                    Title="Is Developer " />
+    <PropertyColumn Property="employee => employee.Department!.Name"
+                    Sortable="true" Title="Department" />
+
+    <TemplateColumn Context="employee">
+        <a href="@($"employees/edit?id={employee.Id}")">Edit</a> |
+        <a href="@($"employees/details?id={employee.Id}")">Details</a> |
+        <a href="@($"employees/delete?id={employee.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+<Paginator State="paginationState" />
+
+@code {
+    PaginationState paginationState = new PaginationState { ItemsPerPage = 4 };
+    private static EmployeeManagerDbContext context = default!;
+
+    private static string firstNameFilter = String.Empty;
+
+    IQueryable<Employee> Employees => DbFactory.CreateDbContext().Employee
+                                            .Include(e => e.Department)
+                                            .Where(e => e.FirstName!.Contains(firstNameFilter));
+}
